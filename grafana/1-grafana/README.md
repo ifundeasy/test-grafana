@@ -9,6 +9,7 @@ we will use `grafana/grafana`
 ## install
 ```bash
 helm search repo grafana/grafana
+kubectl apply -f secrets.yaml
 helm upgrade --install grafana grafana/grafana -f values.yaml --namespace monitoring --create-namespace
 ```
 
