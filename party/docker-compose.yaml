@@ -45,9 +45,11 @@ services:
       - "-c"
       - |
         sleep 3
-        aws --endpoint-url=http://localstack:4566 s3 mb s3://loki-data
-        aws --endpoint-url=http://localstack:4566 s3 mb s3://tempo-data
-        aws --endpoint-url=http://localstack:4566 s3 mb s3://mimir-data
+        aws --endpoint-url=http://localstack:4566 s3 mb s3://grafana-loki-chunks
+        aws --endpoint-url=http://localstack:4566 s3 mb s3://grafana-loki-ruler
+        aws --endpoint-url=http://localstack:4566 s3 mb s3://grafana-loki-admin
+        aws --endpoint-url=http://localstack:4566 s3 mb s3://grafana-tempo-data
+        aws --endpoint-url=http://localstack:4566 s3 mb s3://grafana-mimir-data
         aws --endpoint-url=http://localstack:4566 s3 ls
 
     depends_on:

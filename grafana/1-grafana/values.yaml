@@ -1,6 +1,6 @@
 # -- Use admin user/pass from secret
 admin:
-  existingSecret: grafana-admin-secret
+  existingSecret: nafagra-admin-secret
   userKey: admin-user
   passwordKey: admin-password
 
@@ -13,19 +13,19 @@ datasources:
       - name: Loki
         uid: loki
         type: loki
-        url: http://loki-loki-gateway
+        url: http://kilo-loki-distributed-gateway
         isDefault: false
       # https://grafana.com/docs/grafana/latest/datasources/prometheus/#provision-the-data-source
       - name: Mimir
         uid: prom
         type: prometheus
-        url: http://mimir-mimir-nginx/prometheus
+        url: http://mirmi-mimir-distributed-nginx/prometheus
         isDefault: true
       # https://grafana.com/docs/grafana/latest/datasources/tempo/configure-tempo-data-source/#provision-the-data-source
       - name: Tempo
         uid: tempo
         type: tempo
-        url: http://mimir-tempo-query-frontend:3100
+        url: http://potem-tempo-distributed-query-frontend:3100
         isDefault: false
         jsonData:
           tracesToLogsV2:
