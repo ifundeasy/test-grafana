@@ -1,0 +1,113 @@
+# NOTE: https://medium.com/@martinko.komorny/grafana-agent-alloy-mimir-minio-grafana-in-kubernetes-42cb63020f75
+
+mimir:
+  structuredConfig:
+    common:
+      storage:
+        backend: s3
+        s3:
+          endpoint: host.docker.internal:9000
+          access_key_id: default
+          secret_access_key: mypswd123
+          bucket_name: grafana-mimir-common
+          region: us-east-1
+          insecure: true # minio/localstack = true, AWS S3 = false
+    alertmanager_storage:
+      backend: s3
+      s3:
+        bucket_name: grafana-mimir-alert
+    ruler_storage:
+      backend: s3
+      s3:
+        bucket_name: grafana-mimir-ruler
+    blocks_storage:
+      backend: s3
+      s3:
+        bucket_name: grafana-mimir-blocks
+    
+    memberlist:
+      cluster_label: "mimir"
+      cluster_label_verification_disabled: false
+    server:
+      log_level: info
+      # grpc_server_max_recv_msg_size: 104857600
+      # grpc_server_max_send_msg_size: 104857600
+      # grpc_server_max_concurrent_streams: 1000
+    limits:
+      # max_label_names_per_series: 120
+      # max_global_series_per_user: 12000000
+      # ingestion_burst_size: 200000
+      # ingestion_rate: 150000
+      # max_global_series_per_metric: 200000000
+      compactor_blocks_retention_period: 24h
+    compactor:
+      compaction_interval: 24h
+
+ingester:
+  zoneAwareReplication:
+    enabled: false
+  persistentVolume:
+    enabled: false
+  replicas: 1
+
+distributor:
+  extraArgs:
+    auth.multitenancy-enabled: false
+    log.level: info
+  replicas: 1
+
+compactor:
+  replicas: 1
+
+querier:
+  replicas: 1
+
+query_scheduler:
+  replicas: 1
+
+query_frontend:
+  replicas: 1
+
+store_gateway:
+  zoneAwareReplication:
+    enabled: false
+  replicas: 1
+
+rollout_operator:
+  replicas: 1
+
+ruler:
+  # extraArgs:
+  #   auth.multitenancy-enabled: false
+  replicas: 1
+
+overrides_exporter:
+  replicas: 1
+
+alertmanager:
+  replicas: 1
+
+gateway:
+  replicas: 1
+
+admin-cache:
+  replicas: 1
+
+chunks-cache:
+  replicas: 1
+
+index-cache:
+  replicas: 1
+
+metadata-cache:
+  replicas: 1
+
+results-cache:
+  replicas: 1
+
+nginx:
+  replicas: 1
+
+## disabled services ##
+minio:
+  enabled: false

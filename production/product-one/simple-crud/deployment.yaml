@@ -1,0 +1,61 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: simple-crud
+  namespace: product-one
+spec:
+  selector:
+    app: simple-crud
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000
+      nodePort: 30000
+  type: NodePort
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: simple-crud-config
+  namespace: product-one
+data:
+  APP_NAME: simple-crud
+  APP_PORT: "3000"
+  OTEL_RPC_URI: jaeger:4317
+  EXTERNAL_API: http://simple-crud.product-two.svc.cluster.local:3000/products
+  MONGO_URI: mongodb://root:mypswd123@host.docker.internal:27017
+  MONGO_DB_NAME: grafana
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: simple-crud
+  namespace: product-one
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: simple-crud
+  template:
+    metadata:
+      labels:
+        app: simple-crud
+    spec:
+      dnsPolicy: ClusterFirst
+      containers:
+        - name: simple-crud
+          image: ifundeasy/simple-crud:latest
+          imagePullPolicy: Always
+          tty: true
+          envFrom:
+            - configMapRef:
+                name: simple-crud-config
+          resources:
+            requests:
+              cpu: 100m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+          ports:
+            - containerPort: 3000
