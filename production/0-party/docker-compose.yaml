@@ -1,0 +1,79 @@
+name: grafana-party
+
+services:
+
+  mongodb:
+    image: mongo:latest
+    networks:
+      - network-grafana-party
+    volumes:
+      - data-grafana-mongodb:/data/db
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=mypswd123
+
+  mysql:
+    image: mysql:8.0.34
+    environment:
+      MYSQL_ROOT_PASSWORD: myRootPassword123
+      MYSQL_DATABASE: grafana
+      MYSQL_USER: default
+      MYSQL_PASSWORD: mypswd123
+    ports:
+      - '3306:3306'
+    volumes:
+      - data-grafana-party-mysql:/var/lib/mysql
+    networks:
+      - network-grafana-party
+
+
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    ports:
+      - "9000:9000"   # S3 API
+      - "9001:9001"   # Console UI
+    environment:
+      MINIO_ROOT_USER: default
+      MINIO_ROOT_PASSWORD: mypswd123
+    command: server /data --console-address ":9001"
+    volumes:
+      - data-grafana-party-minio:/data
+    networks:
+      - network-grafana-party
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  init-buckets:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+        mc alias set local http://minio:9000 default mypswd123 &&
+        mc mb local/grafana-loki-chunks --ignore-existing &&
+        mc mb local/grafana-loki-ruler --ignore-existing &&
+        mc mb local/grafana-loki-admin --ignore-existing &&
+        mc mb local/grafana-tempo-common --ignore-existing &&
+        mc mb local/grafana-mimir-common --ignore-existing &&
+        mc mb local/grafana-mimir-blocks --ignore-existing &&
+        mc mb local/grafana-mimir-ruler --ignore-existing &&
+        mc mb local/grafana-mimir-alert --ignore-existing
+      "
+    networks:
+      - network-grafana-party
+
+volumes:
+  data-grafana-mongodb:
+  data-grafana-party-mysql:
+  data-grafana-party-minio:
+
+networks:
+  network-grafana-party:
+    driver: bridge

@@ -1,0 +1,61 @@
+# NOTE: https://medium.com/@martinko.komorny/grafana-agent-alloy-tempo-minio-grafana-in-kubernetes-9a5b32550811
+
+replicas: 1
+
+tempo:
+  retention: 5h
+  server:
+    http_listen_port: 3100
+  ingester:
+    trace_idle_period: 20s # the length of time after a trace has not received spans to consider it complete and flush it
+    max_block_bytes: 1_000_000 # cut the head block when it hits this size or ...
+    max_block_duration: 5m # this much time passes
+    lifecycler:
+      ring:
+        kvstore:
+          store: memberlist
+        replication_factor: 3
+      heartbeat_period: 100ms
+    flush_check_period: 20s
+    complete_block_timeout: 15m
+  query_frontend:
+    trace_by_id:
+      query_shards: 50
+    tolerate_failed_blocks: 0
+    search:
+      concurrent_jobs: 1000
+      target_bytes_per_job: 104857600
+      max_duration: 168h
+      query_ingesters_until: 30m
+  querier:
+    max_concurrent_queries: 20
+    search:
+      prefer_self: 10
+  storage:
+    trace:
+      backend: s3
+      s3:
+        bucket: grafana-tempo-common
+        endpoint: host.docker.internal:9000
+        access_key: default
+        secret_key: mypswd123
+        insecure: true
+      pool:
+        # worker pool determines the number of parallel requests to the object store backend
+        max_workers: 200
+        queue_depth: 1000000
+  distributor:
+    receivers:
+      # jaeger:
+      # opencensus:
+      #   endpoint: "0.0.0.0:55678"
+      otlp:
+        protocols:
+          grpc:
+            endpoint: "0.0.0.0:4317"
+          http:
+            endpoint: "0.0.0.0:4318"
+  metricsGenerator:
+    enabled: true
+    remoteWriteUrl: http://mr-mimir-nginx.grafana.svc.cluster.local/api/v1/push
+  multitenancy_enabled: true

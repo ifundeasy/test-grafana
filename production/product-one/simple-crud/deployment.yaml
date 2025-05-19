@@ -21,7 +21,7 @@ metadata:
 data:
   APP_NAME: simple-crud
   APP_PORT: "3000"
-  OTEL_RPC_URI: jaeger:4317
+  OTEL_RPC_URI: al-product-one-alloy:4317
   EXTERNAL_API: http://simple-crud.product-two.svc.cluster.local:3000/products
   MONGO_URI: mongodb://root:mypswd123@host.docker.internal:27017
   MONGO_DB_NAME: grafana

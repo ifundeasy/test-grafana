@@ -1,0 +1,101 @@
+global:
+  dnsNamespace: kube-system
+  clusterDomain: cluster.local
+
+multitenancy_enabled: true
+
+storage:
+  trace:
+    backend: s3
+    s3:
+      bucket: grafana-tempo-common
+      endpoint: host.docker.internal:9000
+      access_key: default
+      secret_key: mypswd123
+      insecure: true
+
+distributor:
+  replicas: 2
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 4
+  receivers:
+    # jaeger:
+    # opencensus:
+    #   endpoint: "0.0.0.0:55678"
+    otlp:
+      protocols:
+        grpc:
+          endpoint: "0.0.0.0:4317"
+        http:
+          endpoint: "0.0.0.0:4318"
+  config:
+    log_received_spans:
+      enabled: true
+    log_discarded_spans:
+      enabled: true
+
+ingester:
+  replicas: 2
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 4
+
+metricsGenerator:
+  enabled: true
+  remoteWriteUrl: http://mr-mimir-nginx.grafana.svc.cluster.local/api/v1/push
+  replicas: 1
+  autoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 2
+
+memcached:
+  replicas: 1
+  autoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 2
+
+querier:
+  replicas: 1
+  autoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 2
+
+queryFrontend:
+  query:
+    enabled: true
+  replicas: 1
+  autoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 2
+
+gateway:
+  enabled: true
+  replicas: 2
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 4
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 400m
+      memory: 512Mi
+
+traces:
+  otlp:
+    http:
+      enabled: true
+    grpc:
+      enabled: true
+
+minio:
+  enabled: false

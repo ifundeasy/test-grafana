@@ -9,6 +9,7 @@ kubectl apply -f simple-crud --namespace product-two
 
 ## uninstall
 ```bash
+cd production/product-two
 kubectl delete -f simple-crud --namespace product-two
 ```
 
