@@ -1,0 +1,74 @@
+logging {
+	level  = "info"
+	format = "logfmt"
+}
+
+discovery.kubernetes "k8s" {
+	role = "pod"
+
+	namespaces {
+		names = ["product-one"]
+	}
+}
+
+// ── LOGGING ─────────────────────────────────────────────
+loki.write "default" {
+	endpoint {
+		url     = "http://lk-loki-gateway.grafana.svc.cluster.local/loki/api/v1/push"
+		headers = {
+			"X-Scope-OrgID" = "myorg-production-productone",
+		}
+	}
+}
+
+loki.source.kubernetes "pods" {
+	targets    = discovery.kubernetes.k8s.targets
+	forward_to = [loki.write.default.receiver]
+}
+
+// ── TRACING ─────────────────────────────────────────────
+otelcol.receiver.otlp "traces" {
+	grpc {
+		endpoint = "0.0.0.0:4317"
+	}
+
+	http {
+		endpoint = "0.0.0.0:4318"
+	}
+
+	output {
+		traces = [otelcol.processor.attributes.traces.input]
+	}
+}
+
+otelcol.processor.attributes "traces" {
+	action {
+		key    = "business-unit"
+		value  = "product-one"
+		action = "insert"
+	}
+
+	output {
+		traces = [otelcol.processor.batch.traces.input]
+	}
+}
+
+otelcol.exporter.otlp "traces" {
+	client {
+		endpoint = "tp-tempo-distributor.grafana.svc.cluster.local:4317"
+		headers  = {
+			"X-Scope-OrgID" = "myorg-production-productone",
+		}
+
+		tls {
+			insecure             = true
+			insecure_skip_verify = true
+		}
+	}
+}
+
+otelcol.processor.batch "traces" {
+	output {
+		traces = [otelcol.exporter.otlp.traces.input]
+	}
+}

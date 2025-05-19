@@ -15,7 +15,6 @@ datasources:
     apiVersion: 1
     # -- Datasources linked to the Grafana instance. Override if you disable any components.
     datasources:
-    
       # https://grafana.com/docs/grafana/latest/datasources/loki/#provision-the-loki-data-source
       - name: loki-myorg-production-grafana
         uid: loki-myorg-production-grafana
@@ -52,8 +51,28 @@ datasources:
           httpHeaderName1: "X-Scope-OrgID"
         secureJsonData:
           httpHeaderValue1: "myorg-production-producttwo"
-        
+
       # https://grafana.com/docs/grafana/latest/datasources/tempo/configure-tempo-data-source/#provision-the-data-source
+      - name: tempo-myorg-production-grafana
+        uid: tempo-myorg-production-grafana
+        type: tempo
+        url: http://tp-tempo-gateway
+        isDefault: false
+        access: proxy
+        editable: true
+        jsonData:
+          httpHeaderName1: "X-Scope-OrgID"
+          tracesToLogsV2:
+            datasourceUid: loki-myorg-production-grafana
+          lokiSearch:
+            datasourceUid: loki-myorg-production-grafana
+          tracesToMetrics:
+            datasourceUid: mimir-myorg-production-grafana
+          serviceMap:
+            datasourceUid: pyroscope-myorg-production-grafana
+        secureJsonData:
+          httpHeaderValue1: "myorg-production-grafana"
+
       - name: tempo-myorg-production-productone
         uid: tempo-myorg-production-productone
         type: tempo
@@ -73,8 +92,7 @@ datasources:
             datasourceUid: pyroscope-myorg-production-productone
         secureJsonData:
           httpHeaderValue1: "myorg-production-productone"
-        
-      # https://grafana.com/docs/grafana/latest/datasources/tempo/configure-tempo-data-source/#provision-the-data-source
+
       - name: tempo-myorg-production-producttwo
         uid: tempo-myorg-production-producttwo
         type: tempo

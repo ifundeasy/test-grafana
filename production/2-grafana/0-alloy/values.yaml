@@ -3,19 +3,48 @@ replicaCount: 1
 controller:
   type: deployment
 
+image:
+  repository: grafana/alloy
+  tag: latest
+  pullPolicy: IfNotPresent
+
 alloy:
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+  extraPorts:
+    - name: grpc-otlp
+      port: 4317
+      targetPort: 4317
+      protocol: TCP
+    - name: http-otlp
+      port: 4318
+      targetPort: 4318
+      protocol: TCP
+
   configMap:
     create: true
     name: alloy-config
     content: |
+      logging {
+        level  = "info"
+        format = "logfmt"
+      }
+
       discovery.kubernetes "k8s" {
         role = "pod"
 
         namespaces {
-          names = ["grafana"]
+          names = ["product-one"]
         }
       }
 
+      // ── LOGGING ─────────────────────────────────────────────
       loki.write "default" {
         endpoint {
           url     = "http://lk-loki-gateway/loki/api/v1/push"
@@ -30,22 +59,49 @@ alloy:
         forward_to = [loki.write.default.receiver]
       }
 
-image:
-  repository: grafana/alloy
-  tag: latest
-  pullPolicy: IfNotPresent
+      // ── TRACING ─────────────────────────────────────────────
+      otelcol.receiver.otlp "traces" {
+        grpc {
+          endpoint = "0.0.0.0:4317"
+        }
 
-service:
-  enabled: true
-  ports:
-    - name: http-metrics
-      port: 12345
-      targetPort: 12345
+        http {
+          endpoint = "0.0.0.0:4318"
+        }
 
-resources:
-  limits:
-    cpu: 200m
-    memory: 256Mi
-  requests:
-    cpu: 100m
-    memory: 128Mi
+        output {
+          traces = [otelcol.processor.attributes.traces.input]
+        }
+      }
+
+      otelcol.processor.attributes "traces" {
+        action {
+          key    = "business-unit"
+          value  = "product-two"
+          action = "insert"
+        }
+
+        output {
+          traces = [otelcol.processor.batch.traces.input]
+        }
+      }
+
+      otelcol.exporter.otlp "traces" {
+        client {
+          endpoint = "tp-tempo-distributor:4317"
+          headers  = {
+            "X-Scope-OrgID" = "myorg-production-grafana",
+          }
+
+          tls {
+            insecure             = true
+            insecure_skip_verify = true
+          }
+        }
+      }
+
+      otelcol.processor.batch "traces" {
+        output {
+          traces = [otelcol.exporter.otlp.traces.input]
+        }
+      }
