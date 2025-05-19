@@ -40,7 +40,7 @@ alloy:
         role = "pod"
 
         namespaces {
-          names = ["product-one"]
+          names = ["grafana"]
         }
       }
 
