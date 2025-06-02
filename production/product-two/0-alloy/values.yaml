@@ -31,12 +31,16 @@ alloy:
     create: true
     name: alloy-config
     content: |
+      livedebugging {
+        enabled = true
+      }
+
       logging {
         level  = "info"
         format = "logfmt"
       }
 
-      discovery.kubernetes "k8s" {
+      discovery.kubernetes "pod" {
         role = "pod"
 
         namespaces {
@@ -54,8 +58,8 @@ alloy:
         }
       }
 
-      loki.source.kubernetes "pods" {
-        targets    = discovery.kubernetes.k8s.targets
+      loki.source.kubernetes "default" {
+        targets = discovery.kubernetes.pod.targets
         forward_to = [loki.write.default.receiver]
       }
 
@@ -86,6 +90,12 @@ alloy:
         }
       }
 
+      otelcol.processor.batch "traces" {
+        output {
+          traces = [otelcol.exporter.otlp.traces.input]
+        }
+      }
+
       otelcol.exporter.otlp "traces" {
         client {
           endpoint = "tp-tempo-distributor.grafana.svc.cluster.local:4317"
@@ -97,11 +107,5 @@ alloy:
             insecure             = true
             insecure_skip_verify = true
           }
-        }
-      }
-
-      otelcol.processor.batch "traces" {
-        output {
-          traces = [otelcol.exporter.otlp.traces.input]
         }
       }

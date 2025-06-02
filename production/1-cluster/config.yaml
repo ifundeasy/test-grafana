@@ -15,9 +15,3 @@ nodes:
     #     hostPort: 8081
   - role: worker
   - role: worker
-  - role: worker
-  - role: worker
-  - role: worker
-  - role: worker
-  - role: worker
-  - role: worker

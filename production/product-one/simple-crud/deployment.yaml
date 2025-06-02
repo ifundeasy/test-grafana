@@ -19,10 +19,12 @@ metadata:
   name: simple-crud-config
   namespace: product-one
 data:
-  APP_NAME: simple-crud
+  APP_NAME:  product-one-simple-crud
   APP_PORT: "3000"
+  PYROSCOPE_URI: "py-pyroscope.grafana.svc.cluster.local:4040"
   OTEL_RPC_URI: al-product-one-alloy:4317
-  EXTERNAL_API: http://simple-crud.product-two.svc.cluster.local:3000/products
+  EXTERNAL_GRPC: "grpc-server:50051"
+  EXTERNAL_HTTP: http://simple-crud.product-two.svc.cluster.local:3000/products
   MONGO_URI: mongodb://root:mypswd123@host.docker.internal:27017
   MONGO_DB_NAME: grafana
 ---
@@ -31,20 +33,24 @@ kind: Deployment
 metadata:
   name: simple-crud
   namespace: product-one
+  # labels:
+  #   app.kubernetes.io/name: product-one-simple-crud
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: simple-crud
+      app:  product-one-simple-crud
+      # app.kubernetes.io/name: product-one-simple-crud
   template:
     metadata:
       labels:
-        app: simple-crud
+        app:  product-one-simple-crud
+        # app.kubernetes.io/name: product-one-simple-crud
     spec:
       dnsPolicy: ClusterFirst
       containers:
         - name: simple-crud
-          image: ifundeasy/simple-crud:latest
+          image: ifundeasy/simple-crud:v1.0.5
           imagePullPolicy: Always
           tty: true
           envFrom:

@@ -31,12 +31,16 @@ alloy:
     create: true
     name: alloy-config
     content: |
+      livedebugging {
+        enabled = true
+      }
+
       logging {
         level  = "info"
         format = "logfmt"
       }
 
-      discovery.kubernetes "k8s" {
+      discovery.kubernetes "pod" {
         role = "pod"
 
         namespaces {
@@ -54,8 +58,8 @@ alloy:
         }
       }
 
-      loki.source.kubernetes "pods" {
-        targets    = discovery.kubernetes.k8s.targets
+      loki.source.kubernetes "default" {
+        targets = discovery.kubernetes.pod.targets
         forward_to = [loki.write.default.receiver]
       }
 
@@ -77,12 +81,18 @@ alloy:
       otelcol.processor.attributes "traces" {
         action {
           key    = "business-unit"
-          value  = "product-two"
+          value  = "product-one"
           action = "insert"
         }
 
         output {
           traces = [otelcol.processor.batch.traces.input]
+        }
+      }
+
+      otelcol.processor.batch "traces" {
+        output {
+          traces = [otelcol.exporter.otlp.traces.input]
         }
       }
 
@@ -97,11 +107,5 @@ alloy:
             insecure             = true
             insecure_skip_verify = true
           }
-        }
-      }
-
-      otelcol.processor.batch "traces" {
-        output {
-          traces = [otelcol.exporter.otlp.traces.input]
         }
       }

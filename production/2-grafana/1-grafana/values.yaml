@@ -37,6 +37,11 @@ datasources:
         editable: true
         jsonData:
           httpHeaderName1: "X-Scope-OrgID"
+          derivedFields:
+            - datasourceUid: tempo-myorg-production-productone
+              name: traceId
+              matcherRegex: '"trace_id"\s*:\s*"([a-fA-F0-9]+)"'
+              url: '$${__value.raw}'
         secureJsonData:
           httpHeaderValue1: "myorg-production-productone"
 
@@ -49,6 +54,11 @@ datasources:
         editable: true
         jsonData:
           httpHeaderName1: "X-Scope-OrgID"
+          derivedFields:
+            - datasourceUid: tempo-myorg-production-producttwo
+              name: traceId
+              matcherRegex: '"trace_id"\s*:\s*"([a-fA-F0-9]+)"'
+              url: '$${__value.raw}'
         secureJsonData:
           httpHeaderValue1: "myorg-production-producttwo"
 
