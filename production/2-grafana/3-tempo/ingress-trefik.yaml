@@ -1,0 +1,40 @@
+# apiVersion: networking.k8s.io/v1
+# kind: Ingress
+# metadata:
+#   name: tempo-ingress
+#   namespace: grafana
+#   annotations:
+#     traefik.ingress.kubernetes.io/router.entrypoints: websecure
+#     traefik.ingress.kubernetes.io/router.tls: "true"
+#     traefik.ingress.kubernetes.io/router.protocol: h2c
+# spec:
+#   ingressClassName: traefik
+#   rules:
+#     - host: tempo.local
+#       http:
+#         paths:
+#           - path: / # GRPC endpoint (gRPC harus tetap root jika pakai otel)
+#             pathType: Prefix
+#             backend:
+#               service:
+#                 name: tp-tempo-distributor
+#                 port:
+#                   number: 4317
+#   tls:
+#     - hosts:
+#         - tempo.local
+
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRouteTCP
+metadata:
+  name: tempo-grpc
+  namespace: grafana
+spec:
+  entryPoints:
+    - grpc
+  routes:
+    - match: HostSNI(`tempo.local`)
+      services:
+        - name: tp-tempo-distributor
+          port: 4317

@@ -31,16 +31,116 @@ alloy:
     create: true
     name: alloy-config
     content: |
+      livedebugging {
+        enabled = true
+      }
+
       logging {
         level  = "info"
         format = "logfmt"
       }
 
-      discovery.kubernetes "k8s" {
+      discovery.kubernetes "pods" {
         role = "pod"
 
         namespaces {
           names = ["grafana"]
+        }
+      }
+
+      discovery.relabel "pod_relabel" {
+        targets = discovery.kubernetes.pods.targets
+
+        rule {
+          source_labels = ["__meta_kubernetes_pod_controller_kind", "__meta_kubernetes_pod_controller_name"]
+          separator     = "/"
+          regex         = "ReplicaSet/(.+)"
+          target_label  = "__tmp_replicaset_name"
+          replacement   = "${1}"
+        }
+        
+        rule {
+          source_labels = ["__tmp_replicaset_name"]
+          regex         = "(.+)-[a-z0-9]+"
+          target_label  = "__tmp_deployment_name"
+          replacement   = "${1}"
+        }
+
+        rule {
+          source_labels = ["__meta_kubernetes_pod_controller_kind", "__meta_kubernetes_pod_controller_name"]
+          separator     = "/"
+          regex         = "Deployment/(.+)"
+          target_label  = "__tmp_deployment_name"
+          replacement   = "${1}"
+        }
+
+
+        rule {
+          source_labels = ["__meta_kubernetes_pod_controller_kind", "__meta_kubernetes_pod_controller_name"]
+          separator     = "/"
+          regex         = "StatefulSet/(.+)"
+          target_label  = "__tmp_deployment_name"
+          replacement   = "${1}"
+        }
+
+        
+        rule {
+          source_labels = ["__meta_kubernetes_pod_controller_kind", "__meta_kubernetes_pod_controller_name"]
+          separator     = "/"
+          regex         = "DaemonSet/(.+)"
+          target_label  = "__tmp_deployment_name"
+          replacement   = "${1}"
+        }
+
+        rule {
+          source_labels = ["__meta_kubernetes_pod_controller_kind", "__meta_kubernetes_pod_controller_name"]
+          separator     = "/"
+          regex         = "Job/(.+)"
+          target_label  = "__tmp_deployment_name"
+          replacement   = "${1}"
+        }
+
+        rule {
+          source_labels = ["__meta_kubernetes_pod_controller_name"]
+          target_label  = "__tmp_fallback_name"
+        }
+
+        rule {
+          source_labels = ["__tmp_deployment_name", "__tmp_fallback_name"]
+          separator     = ""
+          regex         = "^$"
+          replacement   = "${2}"
+          target_label  = "__tmp_deployment_name"
+        }
+
+        rule {
+          source_labels = ["__tmp_deployment_name"]
+          target_label  = "service_name"
+        }
+
+        rule {
+          source_labels = ["__tmp_deployment_name"]
+          target_label  = "deployment_name"
+        }
+      }
+
+      discovery.relabel "metrics" {
+         targets = discovery.kubernetes.pods.targets
+        rule {
+          source_labels = ["__meta_kubernetes_pod_annotation_prometheus_io_port"]
+          target_label  = "__meta_kubernetes_pod_container_port_number"
+          action = "keepequal"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_container_port_number"]
+          regex = ""
+          action = "drop"
+        }    
+        rule {
+          source_labels = ["__meta_kubernetes_pod_annotation_prometheus_io_path",]
+          target_label  = "__metrics_path__"
+          separator = ""
+          action = "replace"
         }
       }
 
@@ -55,7 +155,7 @@ alloy:
       }
 
       loki.source.kubernetes "pods" {
-        targets    = discovery.kubernetes.k8s.targets
+        targets    = discovery.relabel.pod_relabel.output
         forward_to = [loki.write.default.receiver]
       }
 
@@ -81,6 +181,13 @@ alloy:
           action = "insert"
         }
 
+        // Replace service.name with deployment name from Kubernetes metadata
+        action {
+          key    = "service.name"
+          from_attribute = "pods.deployment.name"
+          action = "upsert"
+        }
+
         output {
           traces = [otelcol.processor.batch.traces.input]
         }
@@ -103,5 +210,25 @@ alloy:
       otelcol.processor.batch "traces" {
         output {
           traces = [otelcol.exporter.otlp.traces.input]
+        }
+      }
+
+      // ── METRICS ────────────────────────────────────────────
+      prometheus.scrape "pods" {
+        clustering {
+            enabled = true
+        }
+        targets    = discovery.relabel.metrics.output
+        forward_to = [prometheus.remote_write.mimir.receiver]
+
+        scrape_interval = "30s"
+      }
+
+      prometheus.remote_write "mimir" {
+        endpoint {
+          url = "http://mr-mimir-distributor:8080/api/v1/push"
+          headers = {
+            "X-Scope-OrgID" = "myorg-production-grafana",
+          }
         }
       }

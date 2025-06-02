@@ -16,7 +16,7 @@ loki.write "default" {
 	endpoint {
 		url     = "http://lk-loki-gateway.grafana.svc.cluster.local/loki/api/v1/push"
 		headers = {
-			"X-Scope-OrgID" = "myorg-production-productone",
+			"X-Scope-OrgID" = "myorg-production-grafana",
 		}
 	}
 }
@@ -57,7 +57,7 @@ otelcol.exporter.otlp "traces" {
 	client {
 		endpoint = "tp-tempo-distributor.grafana.svc.cluster.local:4317"
 		headers  = {
-			"X-Scope-OrgID" = "myorg-production-productone",
+			"X-Scope-OrgID" = "myorg-production-grafana",
 		}
 
 		tls {
