@@ -41,7 +41,7 @@ datasources:
             - datasourceUid: tempo-myorg-production-productone
               name: traceId
               matcherRegex: '"trace_id"\s*:\s*"([a-fA-F0-9]+)"'
-              url: '$${__value.raw}'
+              url: "$${__value.raw}"
         secureJsonData:
           httpHeaderValue1: "myorg-production-productone"
 
@@ -58,7 +58,7 @@ datasources:
             - datasourceUid: tempo-myorg-production-producttwo
               name: traceId
               matcherRegex: '"trace_id"\s*:\s*"([a-fA-F0-9]+)"'
-              url: '$${__value.raw}'
+              url: "$${__value.raw}"
         secureJsonData:
           httpHeaderValue1: "myorg-production-producttwo"
 
@@ -120,6 +120,42 @@ datasources:
             datasourceUid: mimir-myorg-production-producttwo
           serviceMap:
             datasourceUid: pyroscope-myorg-production-producttwo
+        secureJsonData:
+          httpHeaderValue1: "myorg-production-producttwo"
+
+      - name: mimir-myorg-production-grafana
+        uid: mimir-myorg-production-grafana
+        type: prometheus
+        url: http://mr-mimir-query-frontend:8080/prometheus
+        access: proxy
+        isDefault: false
+        editable: true
+        jsonData:
+          httpHeaderName1: "X-Scope-OrgID"
+        secureJsonData:
+          httpHeaderValue1: "myorg-production-grafana"
+
+      - name: mimir-myorg-production-productone
+        uid: mimir-myorg-production-productone
+        type: prometheus
+        url: http://mr-mimir-query-frontend:8080/prometheus
+        access: proxy
+        isDefault: false
+        editable: true
+        jsonData:
+          httpHeaderName1: "X-Scope-OrgID"
+        secureJsonData:
+          httpHeaderValue1: "myorg-production-productone"
+
+      - name: mimir-myorg-production-producttwo
+        uid: mimir-myorg-production-producttwo
+        type: prometheus
+        url: http://mr-mimir-query-frontend:8080/prometheus
+        access: proxy
+        isDefault: false
+        editable: true
+        jsonData:
+          httpHeaderName1: "X-Scope-OrgID"
         secureJsonData:
           httpHeaderValue1: "myorg-production-producttwo"
 

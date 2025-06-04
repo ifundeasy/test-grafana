@@ -1,4 +1,14 @@
 # NOTE: https://medium.com/@martinko.komorny/grafana-agent-alloy-mimir-minio-grafana-in-kubernetes-42cb63020f75
+query_scheduler:
+  replicas: 1 # Modify Number of replicas if you want, The default number of replicas for the query_scheduler is 2
+querier:
+  replicas: 1 # Modify Number of replicas if you want, The default number of replicas for the querier is 2# Choose the storageClass you wanna use
+ingester:
+  zoneAwareReplication: # zone-aware replication is the replication of data across failure domains, Enable it if you want to use it, https://grafana.com/docs/mimir/latest/configure/configure-zone-aware-replication/
+    enabled: false
+store_gateway:
+  zoneAwareReplication: # zone-aware replication is the replication of data across failure domains, Enable it if you want to use it, https://grafana.com/docs/mimir/latest/configure/configure-zone-aware-replication/
+    enabled: false
 
 mimir:
   structuredConfig:
@@ -6,16 +16,18 @@ mimir:
       storage:
         backend: s3
         s3:
-          endpoint: host.docker.internal:9000
-          access_key_id: default
-          secret_access_key: mypswd123
-          bucket_name: grafana-mimir-common
+          endpoint: 10.140.0.102:9000
+          access_key_id: <youraccess>
+          secret_access_key: <youraccesskey>
+          bucket_name: grafana-mimir-ruler
           region: us-east-1
           insecure: true # minio/localstack = true, AWS S3 = false
+          http:
+            insecure_skip_verify: true
     alertmanager_storage:
       backend: s3
       s3:
-        bucket_name: grafana-mimir-alert
+        bucket_name: grafana-mimir-ruler
     ruler_storage:
       backend: s3
       s3:
@@ -24,167 +36,24 @@ mimir:
       backend: s3
       s3:
         bucket_name: grafana-mimir-blocks
-    
+
     memberlist:
       cluster_label: "mimir"
       cluster_label_verification_disabled: false
     server:
-      log_level: info
-      # grpc_server_max_recv_msg_size: 104857600
-      # grpc_server_max_send_msg_size: 104857600
-      # grpc_server_max_concurrent_streams: 1000
+      log_level: debug
+      grpc_server_max_recv_msg_size: 104857600
+      grpc_server_max_send_msg_size: 104857600
+      grpc_server_max_concurrent_streams: 1000
     limits:
-      # max_label_names_per_series: 120
-      # max_global_series_per_user: 12000000
-      # ingestion_burst_size: 200000
-      # ingestion_rate: 150000
-      # max_global_series_per_metric: 200000000
+      max_label_names_per_series: 120
+      max_global_series_per_user: 12000000
+      ingestion_burst_size: 200000
+      ingestion_rate: 150000
+      max_global_series_per_metric: 200000000
       compactor_blocks_retention_period: 24h
     compactor:
       compaction_interval: 24h
-
-ingester:
-  zoneAwareReplication:
-    enabled: false
-  persistentVolume:
-    enabled: false
-  replicas: 2
-  autoscaling:
-    enabled: true
-    minReplicas: 2
-    maxReplicas: 4
-
-distributor:
-  extraArgs:
-    auth.multitenancy-enabled: false
-    log.level: info
-  replicas: 2
-  autoscaling:
-    enabled: true
-    minReplicas: 2
-    maxReplicas: 4
-
-compactor:
-  replicas: 1
-  autoscaling:
-    enabled: true
-    minReplicas: 1
-    maxReplicas: 2
-
-querier:
-  replicas: 1
-  autoscaling:
-    enabled: true
-    minReplicas: 1
-    maxReplicas: 2
-
-query_scheduler:
-  replicas: 1
-  autoscaling:
-    enabled: true
-    minReplicas: 1
-    maxReplicas: 2
-
-query_frontend:
-  replicas: 1
-  autoscaling:
-    enabled: true
-    minReplicas: 1
-    maxReplicas: 2
-
-store_gateway:
-  zoneAwareReplication:
-    enabled: false
-  replicas: 1
-  autoscaling:
-    enabled: true
-    minReplicas: 1
-    maxReplicas: 3
-
-gateway:
-  enabled: true
-  enabledNonEnterprise: true
-  replicas: 2
-  autoscaling:
-    enabled: true
-    minReplicas: 2
-    maxReplicas: 4
-  resources:
-    requests:
-      cpu: 200m
-      memory: 256Mi
-    limits:
-      cpu: 400m
-      memory: 512Mi
-
-nginx:
-  enabled: false
-
-rollout_operator:
-  replicas: 1
-  autoscaling:
-    enabled: true
-    minReplicas: 1
-    maxReplicas: 2
-
-ruler:
-  # extraArgs:
-  #   auth.multitenancy-enabled: false
-  replicas: 1
-  autoscaling:
-    enabled: false
-    minReplicas: 1
-    maxReplicas: 2
-
-overrides_exporter:
-  replicas: 1
-  autoscaling:
-    enabled: false
-    minReplicas: 1
-    maxReplicas: 2
-
-alertmanager:
-  replicas: 1
-  autoscaling:
-    enabled: false
-    minReplicas: 1
-    maxReplicas: 2
-
-admin-cache:
-  replicas: 1
-  autoscaling:
-    enabled: false
-    minReplicas: 1
-    maxReplicas: 2
-
-chunks-cache:
-  replicas: 1
-  autoscaling:
-    enabled: false
-    minReplicas: 1
-    maxReplicas: 2
-
-index-cache:
-  replicas: 1
-  autoscaling:
-    enabled: false
-    minReplicas: 1
-    maxReplicas: 2
-
-metadata-cache:
-  replicas: 1
-  autoscaling:
-    enabled: false
-    minReplicas: 1
-    maxReplicas: 2
-
-results-cache:
-  replicas: 1
-  autoscaling:
-    enabled: false
-    minReplicas: 1
-    maxReplicas: 2
-
 ## disabled services ##
 minio:
   enabled: false

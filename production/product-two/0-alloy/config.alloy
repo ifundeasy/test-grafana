@@ -1,3 +1,4 @@
+
 livedebugging {
 	enabled = true
 }
@@ -15,23 +16,112 @@ discovery.kubernetes "pod" {
 	}
 }
 
+discovery.relabel "pod_relabel" {
+	targets = discovery.kubernetes.pod.targets
+
+	// Handle ReplicaSet (from Deployment)
+	rule {
+		source_labels = ["__meta_kubernetes_pod_controller_kind", "__meta_kubernetes_pod_controller_name"]
+		separator     = "/"
+		regex         = "ReplicaSet/(.+)"
+		target_label  = "__tmp_replicaset_name"
+		replacement   = "${1}"
+	}
+
+	// Extract deployment name from ReplicaSet name
+	rule {
+		source_labels = ["__tmp_replicaset_name"]
+		regex         = "(.+)-[a-z0-9]+"
+		target_label  = "__tmp_deployment_name"
+		replacement   = "${1}"
+	}
+
+	// Handle direct Deployment controller
+	rule {
+		source_labels = ["__meta_kubernetes_pod_controller_kind", "__meta_kubernetes_pod_controller_name"]
+		separator     = "/"
+		regex         = "Deployment/(.+)"
+		target_label  = "__tmp_deployment_name"
+		replacement   = "${1}"
+	}
+
+	// Handle StatefulSet
+	rule {
+		source_labels = ["__meta_kubernetes_pod_controller_kind", "__meta_kubernetes_pod_controller_name"]
+		separator     = "/"
+		regex         = "StatefulSet/(.+)"
+		target_label  = "__tmp_deployment_name"
+		replacement   = "${1}"
+	}
+
+	// Handle DaemonSet
+	rule {
+		source_labels = ["__meta_kubernetes_pod_controller_kind", "__meta_kubernetes_pod_controller_name"]
+		separator     = "/"
+		regex         = "DaemonSet/(.+)"
+		target_label  = "__tmp_deployment_name"
+		replacement   = "${1}"
+	}
+
+	// Handle Job
+	rule {
+		source_labels = ["__meta_kubernetes_pod_controller_kind", "__meta_kubernetes_pod_controller_name"]
+		separator     = "/"
+		regex         = "Job/(.+)"
+		target_label  = "__tmp_deployment_name"
+		replacement   = "${1}"
+	}
+
+	// Fallback: use pod controller name directly if no specific pattern matches
+	rule {
+		source_labels = ["__tmp_deployment_name"]
+		regex         = ""
+		target_label  = "__tmp_deployment_name"
+		replacement   = ""
+	}
+
+	rule {
+		source_labels = ["__meta_kubernetes_pod_controller_name"]
+		target_label  = "__tmp_fallback_name"
+	}
+
+	rule {
+		source_labels = ["__tmp_deployment_name", "__tmp_fallback_name"]
+		separator     = ""
+		regex         = "^$(.+)"
+		target_label  = "__tmp_deployment_name"
+		replacement   = "${1}"
+	}
+
+	// Set final labels
+	rule {
+		source_labels = ["__tmp_deployment_name"]
+		target_label  = "service_name"
+	}
+
+	rule {
+		source_labels = ["__tmp_deployment_name"]
+		target_label  = "deployment_name"
+	}
+}
+
 // ── LOGGING ─────────────────────────────────────────────
-loki.write "default" {
+loki.write "producttwo" {
 	endpoint {
-		url     = "http://lk-loki-gateway.grafana.svc.cluster.local/loki/api/v1/push"
+		url     = "http://loki.local/loki/api/v1/push"
 		headers = {
 			"X-Scope-OrgID" = "myorg-production-producttwo",
 		}
 	}
 }
 
-loki.source.kubernetes "default" {
-	targets = discovery.kubernetes.pod.targets
-	forward_to = [loki.write.default.receiver]
+loki.source.kubernetes "producttwo" {
+	targets = discovery.relabel.pod_relabel.output
+	forward_to = [loki.write.producttwo.receiver]
 }
 
 // ── TRACING ─────────────────────────────────────────────
-otelcol.receiver.otlp "traces" {
+otelcol.receiver.otlp "producttwo" {
 	grpc {
 		endpoint = "0.0.0.0:4317"
 	}
@@ -41,37 +131,218 @@ otelcol.receiver.otlp "traces" {
 	}
 
 	output {
-		traces = [otelcol.processor.attributes.traces.input]
+		traces = [otelcol.processor.attributes.producttwo.input]
 	}
 }
 
-otelcol.processor.attributes "traces" {
+otelcol.processor.attributes "producttwo" {
 	action {
 		key    = "business-unit"
-		value  = "product-two"
+		value  = "product-one"
 		action = "insert"
 	}
+	
+	// Replace service.name with deployment name from Kubernetes metadata
+	action {
+		key    = "service.name"
+		from_attribute = "k8s.deployment.name"
+		action = "upsert"
+	}
 
 	output {
-		traces = [otelcol.processor.batch.traces.input]
+		traces = [otelcol.processor.batch.producttwo.input]
 	}
 }
 
-otelcol.processor.batch "traces" {
+otelcol.processor.batch "producttwo" {
 	output {
-		traces = [otelcol.exporter.otlp.traces.input]
+		traces = [otelcol.exporter.otlp.producttwo.input]
 	}
 }
 
-otelcol.exporter.otlp "traces" {
+otelcol.exporter.otlp "producttwo" {
 	client {
-		endpoint = "tp-tempo-distributor.grafana.svc.cluster.local:4317"
+		endpoint = "tempo.local:8444"
 		headers  = {
 			"X-Scope-OrgID" = "myorg-production-producttwo",
 		}
 
 		tls {
-			insecure             = true
+			insecure = true
+			insecure_skip_verify = true
+		}
+	}
+}content: |
+livedebugging {
+	enabled = true
+}
+
+logging {
+	level  = "info"
+	format = "logfmt"
+}
+
+discovery.kubernetes "pod" {
+	role = "pod"
+
+	namespaces {
+		names = ["product-one"]
+	}
+}
+
+discovery.relabel "pod_relabel" {
+	targets = discovery.kubernetes.pod.targets
+
+	// Handle ReplicaSet (from Deployment)
+	rule {
+		source_labels = ["__meta_kubernetes_pod_controller_kind", "__meta_kubernetes_pod_controller_name"]
+		separator     = "/"
+		regex         = "ReplicaSet/(.+)"
+		target_label  = "__tmp_replicaset_name"
+		replacement   = "${1}"
+	}
+
+	// Extract deployment name from ReplicaSet name
+	rule {
+		source_labels = ["__tmp_replicaset_name"]
+		regex         = "(.+)-[a-z0-9]+"
+		target_label  = "__tmp_deployment_name"
+		replacement   = "${1}"
+	}
+
+	// Handle direct Deployment controller
+	rule {
+		source_labels = ["__meta_kubernetes_pod_controller_kind", "__meta_kubernetes_pod_controller_name"]
+		separator     = "/"
+		regex         = "Deployment/(.+)"
+		target_label  = "__tmp_deployment_name"
+		replacement   = "${1}"
+	}
+
+	// Handle StatefulSet
+	rule {
+		source_labels = ["__meta_kubernetes_pod_controller_kind", "__meta_kubernetes_pod_controller_name"]
+		separator     = "/"
+		regex         = "StatefulSet/(.+)"
+		target_label  = "__tmp_deployment_name"
+		replacement   = "${1}"
+	}
+
+	// Handle DaemonSet
+	rule {
+		source_labels = ["__meta_kubernetes_pod_controller_kind", "__meta_kubernetes_pod_controller_name"]
+		separator     = "/"
+		regex         = "DaemonSet/(.+)"
+		target_label  = "__tmp_deployment_name"
+		replacement   = "${1}"
+	}
+
+	// Handle Job
+	rule {
+		source_labels = ["__meta_kubernetes_pod_controller_kind", "__meta_kubernetes_pod_controller_name"]
+		separator     = "/"
+		regex         = "Job/(.+)"
+		target_label  = "__tmp_deployment_name"
+		replacement   = "${1}"
+	}
+
+	// Fallback: use pod controller name directly if no specific pattern matches
+	rule {
+		source_labels = ["__tmp_deployment_name"]
+		regex         = ""
+		target_label  = "__tmp_deployment_name"
+		replacement   = ""
+	}
+
+	rule {
+		source_labels = ["__meta_kubernetes_pod_controller_name"]
+		target_label  = "__tmp_fallback_name"
+	}
+
+	rule {
+		source_labels = ["__tmp_deployment_name", "__tmp_fallback_name"]
+		separator     = ""
+		regex         = "^$(.+)"
+		target_label  = "__tmp_deployment_name"
+		replacement   = "${1}"
+	}
+
+	// Set final labels
+	rule {
+		source_labels = ["__tmp_deployment_name"]
+		target_label  = "service_name"
+	}
+
+	rule {
+		source_labels = ["__tmp_deployment_name"]
+		target_label  = "deployment_name"
+	}
+}
+
+// ── LOGGING ─────────────────────────────────────────────
+loki.write "producttwo" {
+	endpoint {
+		url     = "http://loki.local/loki/api/v1/push"
+		headers = {
+			"X-Scope-OrgID" = "myorg-production-producttwo",
+		}
+	}
+}
+
+loki.source.kubernetes "producttwo" {
+	targets = discovery.relabel.pod_relabel.output
+	forward_to = [loki.write.producttwo.receiver]
+}
+
+// ── TRACING ─────────────────────────────────────────────
+otelcol.receiver.otlp "producttwo" {
+	grpc {
+		endpoint = "0.0.0.0:4317"
+	}
+
+	http {
+		endpoint = "0.0.0.0:4318"
+	}
+
+	output {
+		traces = [otelcol.processor.attributes.producttwo.input]
+	}
+}
+
+otelcol.processor.attributes "producttwo" {
+	action {
+		key    = "business-unit"
+		value  = "product-one"
+		action = "insert"
+	}
+	
+	// Replace service.name with deployment name from Kubernetes metadata
+	action {
+		key    = "service.name"
+		from_attribute = "k8s.deployment.name"
+		action = "upsert"
+	}
+
+	output {
+		traces = [otelcol.processor.batch.producttwo.input]
+	}
+}
+
+otelcol.processor.batch "producttwo" {
+	output {
+		traces = [otelcol.exporter.otlp.producttwo.input]
+	}
+}
+
+otelcol.exporter.otlp "producttwo" {
+	client {
+		endpoint = "tempo.local:8444"
+		headers  = {
+			"X-Scope-OrgID" = "myorg-production-producttwo",
+		}
+
+		tls {
+			insecure = true
 			insecure_skip_verify = true
 		}
 	}
