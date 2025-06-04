@@ -25,8 +25,8 @@ data:
   PYROSCOPE_URI: "py-pyroscope.grafana.svc.cluster.local:4040"
   OTEL_RPC_URI: al-product-two-alloy:4317
   EXTERNAL_GRPC: "grpc-server:50051"
-  EXTERNAL_HTTP: http://simple-crud.product-two.svc.cluster.local:3000/products
-  MONGO_URI: mongodb://root:<yourpassword>@10.140.0.102:27017/?authSource=admin
+  EXTERNAL_HTTP: http://simple-crud.product-one.svc.cluster.local:3000/products
+  MONGO_URI: mongodb://root:mypswd123@host.docker.internal:27017
   MONGO_DB_NAME: grafana
 ---
 apiVersion: apps/v1

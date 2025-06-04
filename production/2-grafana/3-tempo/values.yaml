@@ -18,9 +18,10 @@ storage:
     backend: s3
     s3:
       bucket: grafana-tempo-common
-      endpoint: 10.140.0.102:9000
-      access_key: <youraccess>
-      secret_key: <youraccesskey>
+      endpoint: host.docker.internal:9000
+      region: us-east-1
+      access_key: default
+      secret_key: mypswd123
       insecure: true
 
 distributor:
@@ -44,6 +45,7 @@ distributor:
       enabled: true
     log_discarded_spans:
       enabled: true
+
   # # Override service to ClusterIP
   # service:
   #   type: ClusterIP

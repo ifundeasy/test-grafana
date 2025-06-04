@@ -31,10 +31,10 @@ loki:
     s3:
       # s3 URL can be used to specify the endpoint, access key, secret key, and bucket name this works well for S3 compatible storages or are hosting Loki on-premises and want to use S3 as the storage backend. Either use the s3 URL or the individual fields below (AWS endpoint, region, secret).
       # s3: s3://access_key:secret_access_key@custom_endpoint/bucket_name
-      endpoint: 10.140.0.102:9000
+      endpoint: host.docker.internal:9000
       region: us-east-1
-      accessKeyId: <youraccess>
-      secretAccessKey: <youraccesskey>
+      accessKeyId: default
+      secretAccessKey: mypswd123
       insecure: true # minio/localstack = true, AWS S3 = false
       s3ForcePathStyle: true # minio/localstack = true, AWS S3 = false
       signatureVersion: v4 # safe default
@@ -137,17 +137,18 @@ gateway:
     maxReplicas: 4
   service:
     type: ClusterIP # Change to LoadBalancer if you want to expose it outside the cluster
-  # Enable ingress untuk akses external
-  ingress:
-    enabled: true
-    ingressClassName: "traefik"
-    annotations:
-      traefik.ingress.kubernetes.io/router.entrypoints: web
-    hosts:
-      - host: loki.local # Ganti sesuai kebutuhan
-        paths:
-          - path: /
-            pathType: Prefix
+  
+  # # ingress for external access, enable this if different cluster, you need load balancer
+  # ingress:
+  #   enabled: true
+  #   ingressClassName: "traefik"
+  #   annotations:
+  #     traefik.ingress.kubernetes.io/router.entrypoints: web
+  #   hosts:
+  #     - host: loki.local
+  #       paths:
+  #         - path: /
+  #           pathType: Prefix
 
 # The Loki canary pushes logs to and queries from this loki installation to test, that it's working correctly
 lokiCanary:

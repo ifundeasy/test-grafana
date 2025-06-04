@@ -16,9 +16,9 @@ mimir:
       storage:
         backend: s3
         s3:
-          endpoint: 10.140.0.102:9000
-          access_key_id: <youraccess>
-          secret_access_key: <youraccesskey>
+          endpoint: host.docker.internal:9000
+          access_key_id: default
+          secret_access_key: mypswd123
           bucket_name: grafana-mimir-ruler
           region: us-east-1
           insecure: true # minio/localstack = true, AWS S3 = false

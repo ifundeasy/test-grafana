@@ -30,10 +30,10 @@ loki:
     s3:
       # s3 URL can be used to specify the endpoint, access key, secret key, and bucket name this works well for S3 compatible storages or are hosting Loki on-premises and want to use S3 as the storage backend. Either use the s3 URL or the individual fields below (AWS endpoint, region, secret).
       # s3: s3://access_key:secret_access_key@custom_endpoint/bucket_name
-      endpoint: 10.140.0.102:9000
+      endpoint: host.docker.internal:9000
       region: us-east-1
-      accessKeyId: <youraccess>
-      secretAccessKey: <youraccesskey>
+      access_key: default
+      secret_key: mypswd123
       insecure: true # minio/localstack = true, AWS S3 = false
       s3ForcePathStyle: true # minio/localstack = true, AWS S3 = false
       signatureVersion: v4 # safe default
