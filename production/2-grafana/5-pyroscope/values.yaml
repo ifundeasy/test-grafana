@@ -1,1 +1,73 @@
-null
+replicaCount: 1
+
+image:
+  repository: grafana/pyroscope
+  pullPolicy: IfNotPresent
+  tag: latest
+
+extraArgs:
+  log.level: debug
+
+extraEnvVars:
+  - name: PYROSCOPE_TENANT_HEADER
+    value: X-Scope-OrgID
+  - name: PYROSCOPE_STORAGE_BACKEND
+    value: s3
+  - name: PYROSCOPE_S3_ENDPOINT
+    value: 10.140.0.102:9000
+  - name: PYROSCOPE_S3_BUCKET_NAME
+    value: grafana-pyroscope-data
+  - name: PYROSCOPE_S3_ACCESS_KEY_ID
+    valueFrom:
+      secretKeyRef:
+        name: pyroscope-s3-secret
+        key: accessKey
+  - name: PYROSCOPE_S3_SECRET_ACCESS_KEY
+    valueFrom:
+      secretKeyRef:
+        name: pyroscope-s3-secret
+        key: secretKey
+  - name: PYROSCOPE_S3_INSECURE
+    value: "true"
+
+podAnnotations:
+  profiles.grafana.com/memory.scrape: "true"
+  profiles.grafana.com/memory.port_name: http2
+  profiles.grafana.com/cpu.scrape: "true"
+  profiles.grafana.com/cpu.port_name: http2
+  profiles.grafana.com/goroutine.scrape: "true"
+  profiles.grafana.com/goroutine.port_name: http2
+
+podSecurityContext:
+  fsGroup: 10001
+  runAsUser: 10001
+  runAsNonRoot: true
+
+podDisruptionBudget:
+  enabled: true
+  maxUnavailable: 1
+
+service:
+  type: ClusterIP
+  port: 4040
+  port_name: http2
+  scheme: HTTP
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: 500m
+    memory: 1Gi
+
+persistence:
+  enabled: false
+
+config: ""
+
+alloy:
+  enabled: false
+
+minio:
+  enabled: false
