@@ -31,14 +31,6 @@ alloy:
       targetPort: 8888
       protocol: TCP
 
-  # enable this for multiple cluster
-  # hostAliases:
-  #   - ip: "10.140.0.104"
-  #     hostnames:
-  #       - "loki.local"   # relate to "lk-loki-gateway"
-  #       - "tempo.local"  # relate to "tp-tempo-distributor"
-  #       - "mimir.local"  # relate to "mr-mimir-distributor:8080"
-
   configMap:
     create: true
     name: alloy-config
@@ -280,9 +272,117 @@ alloy:
         }
 
         endpoint {
+          url = "http://lk-loki-gateway/loki/api/v1/push"
+          headers = {
+            "X-Scope-OrgID" = "myorg-production-grafana",
+          }
+        }
+      }
+
+      otelcol.exporter.prometheus "tracemetrics" {
+        forward_to = [prometheus.remote_write.mimir.receiver]
+      }
+
+      // ── METRICS ────────────────────────────────────────────
+
+      discovery.kubernetes "nodes" {
+        role = "node"
+      }
+
+      // Relabeling untuk kubelet metrics (cAdvisor built-in)
+      discovery.relabel "kubelet_cadvisor" {
+        targets = discovery.kubernetes.nodes.targets
+        
+        rule {
+          source_labels = ["__meta_kubernetes_node_name"]
+          target_label  = "node"
+        }
+        
+        rule {
+          source_labels = ["__meta_kubernetes_node_address_InternalIP"]
+          target_label  = "__address__"
+          replacement   = "${1}:10250"
+        }
+        
+        rule {
+          target_label = "__metrics_path__"
+          replacement  = "/metrics/cadvisor"
+        }
+      }
+
+      // Relabeling untuk kubelet metrics
+      discovery.relabel "kubelet" {
+        targets = discovery.kubernetes.nodes.targets
+        
+        rule {
+          source_labels = ["__meta_kubernetes_node_name"]
+          target_label  = "node"
+        }
+        
+        rule {
+          source_labels = ["__meta_kubernetes_node_address_InternalIP"]
+          target_label  = "__address__"
+          replacement   = "${1}:10250"
+        }
+        
+        rule {
+          target_label = "__metrics_path__"
+          replacement  = "/metrics"
+        }
+      }
+
+      // Scrape kubelet untuk node metrics
+      prometheus.scrape "kubelet" {
+        targets = discovery.relabel.kubelet.output
+        
+        scrape_interval = "30s"
+        scrape_timeout  = "15s"
+        scheme         = "https"
+        
+        bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+        
+        tls_config {
+          ca_file              = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+          insecure_skip_verify = true
+        }
+        
+        forward_to = [prometheus.remote_write.mimir.receiver]
+      }
+
+      // Scrape cAdvisor untuk container/pod metrics
+      prometheus.scrape "cadvisor" {
+        targets = discovery.relabel.kubelet_cadvisor.output
+        
+        scrape_interval = "30s"
+        scrape_timeout  = "15s"
+        scheme         = "https"
+        
+        bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+        
+        tls_config {
+          ca_file              = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+          insecure_skip_verify = true
+        }
+        
+        forward_to = [prometheus.remote_write.mimir.receiver]
+      }
+
+      loki.write "autologging" {
+        external_labels = {
+          job = "alloy-autologging",
+        }
+
+        endpoint {
           url = "http://lk-loki-gateway.grafana.svc.cluster.local/loki/api/v1/push"
           headers = {
             "X-Scope-OrgID" = "myorg-production-grafana",
+          }
+          queue_config {
+            capacity          = 10000
+            max_shards        = 200
+            min_shards        = 1
+            max_samples_per_send = 5000
+            batch_send_deadline = "5s"
           }
         }
       }
