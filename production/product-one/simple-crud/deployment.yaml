@@ -22,7 +22,8 @@ metadata:
 data:
   APP_NAME: simple-crud
   APP_PORT: "3000"
-  PYROSCOPE_URI: "http://ps-pyroscope.grafana.svc.cluster.local:4040"
+  PYROSCOPE_URI: "http://ps-pyroscope-distributor.grafana.svc.cluster.local:4040"
+  PYROSCOPE_TENANTID: "myorg-production-productone"
   OTEL_RPC_URI: al-product-one-alloy:4317
   EXTERNAL_GRPC: "grpc-server:50051"
   EXTERNAL_HTTP: http://simple-crud.product-two.svc.cluster.local:3000/products
@@ -47,7 +48,7 @@ spec:
       dnsPolicy: ClusterFirst
       containers:
         - name: simple-crud
-          image: ifundeasy/simple-crud:v1.0.4
+          image: ifundeasy/simple-crud:rc1.0.5-3
           imagePullPolicy: Always
           tty: true
           envFrom:

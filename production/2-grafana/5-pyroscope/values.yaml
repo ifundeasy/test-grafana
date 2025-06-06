@@ -3,80 +3,100 @@
 # Declare variables to be passed into your templates.
 
 pyroscope:
+  structuredConfig:
+    storage:
+      backend: s3
+      s3:
+        endpoint: host.docker.internal:9000
+        bucket_name: grafana-pyroscope-data
+        access_key_id: default
+        secret_access_key: mypswd123
+        region: us-east-1
+        insecure: true # minio/localstack = true, AWS S3 = false
+
+  podAnnotations:
+    profiles.grafana.com/memory.scrape: "true"
+    profiles.grafana.com/memory.port_name: http2
+    profiles.grafana.com/cpu.scrape: "true"
+    profiles.grafana.com/cpu.port_name: http2
+    profiles.grafana.com/goroutine.scrape: "true"
+    profiles.grafana.com/goroutine.port_name: http2
+      
   extraArgs:
     store-gateway.sharding-ring.replication-factor: "3"
+
   components:
     querier:
       kind: Deployment
-      replicaCount: 3
-      resources:
-        limits:
-          memory: 1Gi
-        requests:
-          memory: 256Mi
-          cpu: 1
+      replicaCount: 2
+      # resources:
+      #   limits:
+      #     memory: 1Gi
+      #   requests:
+      #     memory: 256Mi
+      #     cpu: 1
     query-frontend:
       kind: Deployment
       replicaCount: 2
-      resources:
-        limits:
-          memory: 1Gi
-        requests:
-          memory: 256Mi
-          cpu: 100m
+      # resources:
+      #   limits:
+      #     memory: 1Gi
+      #   requests:
+      #     memory: 256Mi
+      #     cpu: 100m
     query-scheduler:
       kind: Deployment
       replicaCount: 2
-      resources:
-        limits:
-          memory: 1Gi
-        requests:
-          memory: 256Mi
-          cpu: 100m
+      # resources:
+      #   limits:
+      #     memory: 1Gi
+      #   requests:
+      #     memory: 256Mi
+      #     cpu: 100m
     distributor:
       kind: Deployment
       replicaCount: 2
-      resources:
-        limits:
-          memory: 1Gi
-        requests:
-          memory: 256Mi
-          cpu: 500m
+      # resources:
+      #   limits:
+      #     memory: 1Gi
+      #   requests:
+      #     memory: 256Mi
+      #     cpu: 500m
     ingester:
       kind: StatefulSet
-      replicaCount: 3
+      replicaCount: 2
       terminationGracePeriodSeconds: 600
-      resources:
-        limits:
-          memory: 16Gi
-        requests:
-          memory: 8Gi
-          cpu: 1
+      # resources:
+      #   limits:
+      #     memory: 16Gi
+      #   requests:
+      #     memory: 8Gi
+      #     cpu: 1
     compactor:
       kind: StatefulSet
-      replicaCount: 3
+      replicaCount: 2
       terminationGracePeriodSeconds: 1200
       persistence:
         enabled: false
-      resources:
-        limits:
-          memory: 16Gi
-        requests:
-          memory: 8Gi
-          cpu: 1
+      # resources:
+      #   limits:
+      #     memory: 16Gi
+      #   requests:
+      #     memory: 8Gi
+      #     cpu: 1
     store-gateway:
       kind: StatefulSet
-      replicaCount: 3
+      replicaCount: 2
       persistence:
         # The store-gateway needs not need persistent storage, but we still run it as a StatefulSet
         # This is to avoid having blocks of data being
         enabled: false
-      resources:
-        limits:
-          memory: 16Gi
-        requests:
-          memory: 8Gi
-          cpu: 1
+      # resources:
+      #   limits:
+      #     memory: 16Gi
+      #   requests:
+      #     memory: 8Gi
+      #     cpu: 1
       readinessProbe:
         # The store gateway can be configured to wait on startup for ring stability to be reached before it becomes
         # ready. See the `store-gateway.sharding-ring.wait-stability-min-duration` server argument for more information.
@@ -87,20 +107,28 @@ pyroscope:
     tenant-settings:
       kind: Deployment
       replicaCount: 1
-      resources:
-        limits:
-          memory: 4Gi
-        requests:
-          memory: 16Mi
-          cpu: 0.1
+      # resources:
+      #   limits:
+      #     memory: 4Gi
+      #   requests:
+      #     memory: 16Mi
+      #     cpu: 0.1
     ad-hoc-profiles:
       kind: Deployment
       replicaCount: 1
-      resources:
-        limits:
-          memory: 4Gi
-        requests:
-          memory: 16Mi
-          cpu: 0.1
+      # resources:
+      #   limits:
+      #     memory: 4Gi
+      #   requests:
+      #     memory: 16Mi
+      #     cpu: 0.1
+
+
+tracing:
+  profiling_enabled: true
+
+alloy:
+  enabled: false
+  
 minio:
-  enabled: true
+  enabled: false

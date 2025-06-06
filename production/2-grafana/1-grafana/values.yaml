@@ -80,6 +80,8 @@ datasources:
             datasourceUid: mimir-myorg-production-grafana
           serviceMap:
             datasourceUid: pyroscope-myorg-production-grafana
+          traceToProfiles:
+            datasourceUid: pyroscope-myorg-production-grafana
         secureJsonData:
           httpHeaderValue1: "myorg-production-grafana"
 
@@ -100,6 +102,8 @@ datasources:
             datasourceUid: mimir-myorg-production-productone
           serviceMap:
             datasourceUid: pyroscope-myorg-production-productone
+          traceToProfiles:
+            datasourceUid: pyroscope-myorg-production-productone
         secureJsonData:
           httpHeaderValue1: "myorg-production-productone"
 
@@ -119,6 +123,8 @@ datasources:
           tracesToMetrics:
             datasourceUid: mimir-myorg-production-producttwo
           serviceMap:
+            datasourceUid: pyroscope-myorg-production-producttwo
+          traceToProfiles:
             datasourceUid: pyroscope-myorg-production-producttwo
         secureJsonData:
           httpHeaderValue1: "myorg-production-producttwo"
@@ -163,7 +169,7 @@ datasources:
         uid: pyroscope-myorg-production-grafana
         type: phlare
         access: proxy
-        url: http://ps-pyroscope:4040
+        url: http://ps-pyroscope-query-frontend:4040
         isDefault: false
         editable: true
         jsonData:
@@ -175,7 +181,7 @@ datasources:
         uid: pyroscope-myorg-production-productone
         type: phlare
         access: proxy
-        url: http://ps-pyroscope:4040
+        url: http://ps-pyroscope-query-frontend:4040
         isDefault: false
         editable: true
         jsonData:
@@ -187,7 +193,7 @@ datasources:
         uid: pyroscope-myorg-production-producttwo
         type: phlare
         access: proxy
-        url: http://ps-pyroscope:4040
+        url: http://ps-pyroscope-query-frontend:4040
         isDefault: false
         editable: true
         jsonData:

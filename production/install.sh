@@ -31,7 +31,7 @@ helm upgrade --install --values values.yaml mr grafana/mimir-distributed --names
 cd ~/Developer/test-grafana/production/2-grafana/5-pyroscope
 kubectl create namespace grafana || true
 kubectl apply -f secrets.yaml --namespace grafana
-helm upgrade --install --values values-minimal.yaml ps grafana/pyroscope --namespace grafana
+helm upgrade --install --values values.yaml ps grafana/pyroscope --namespace grafana
 
 ##########################
 

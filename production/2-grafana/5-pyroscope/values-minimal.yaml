@@ -59,6 +59,9 @@ persistence:
 
 config: ""
 
+tracing:
+  profiling_enabled: true
+
 alloy:
   enabled: false
 
