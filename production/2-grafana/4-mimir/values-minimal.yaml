@@ -28,7 +28,7 @@ mimir:
       backend: s3
       s3:
         bucket_name: grafana-mimir-blocks
-    
+
     memberlist:
       cluster_label: "mimir"
       cluster_label_verification_disabled: false

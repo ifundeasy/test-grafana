@@ -7,26 +7,24 @@ services:
     networks:
       - network-grafana-party
     volumes:
-      - data-grafana-mongodb:/data/db
+      - data-grafana-party-mongodb:/data/db
     ports:
       - "27017:27017"
     environment:
       - MONGO_INITDB_ROOT_USERNAME=root
       - MONGO_INITDB_ROOT_PASSWORD=mypswd123
 
-  mysql:
-    image: mysql:8.0.34
-    environment:
-      MYSQL_ROOT_PASSWORD: myRootPassword123
-      MYSQL_DATABASE: grafana
-      MYSQL_USER: default
-      MYSQL_PASSWORD: mypswd123
-    ports:
-      - '3306:3306'
-    volumes:
-      - data-grafana-party-mysql:/var/lib/mysql
+  postgres:
+    image: postgres:latest
     networks:
       - network-grafana-party
+    volumes:
+      - data-grafana-party-postgres:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: mypswd123
 
 
   minio:
@@ -64,14 +62,15 @@ services:
         mc mb local/grafana-mimir-common --ignore-existing &&
         mc mb local/grafana-mimir-blocks --ignore-existing &&
         mc mb local/grafana-mimir-ruler --ignore-existing &&
-        mc mb local/grafana-mimir-alert --ignore-existing
+        mc mb local/grafana-mimir-alert --ignore-existing &&
+        mc mb local/grafana-pyroscope-data --ignore-existing
       "
     networks:
       - network-grafana-party
 
 volumes:
-  data-grafana-mongodb:
-  data-grafana-party-mysql:
+  data-grafana-party-mongodb:
+  data-grafana-party-postgres:
   data-grafana-party-minio:
 
 networks:

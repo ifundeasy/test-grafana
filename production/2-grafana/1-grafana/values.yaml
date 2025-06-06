@@ -159,11 +159,38 @@ datasources:
         secureJsonData:
           httpHeaderValue1: "myorg-production-producttwo"
 
-      # # https://grafana.com/docs/grafana/latest/datasources/prometheus/#provision-the-data-source
-      # - name: mimir
-      #   uid: mimir
-      #   type: prometheus
-      #   url: http://mr-mimir-distributed-gateway/prometheus
-      #   isDefault: false
-      #   access: proxy
-      #   editable: true
+      - name: pyroscope-myorg-production-grafana
+        uid: pyroscope-myorg-production-grafana
+        type: phlare
+        access: proxy
+        url: http://ps-pyroscope:4040
+        isDefault: false
+        editable: true
+        jsonData:
+          httpHeaderName1: "X-Scope-OrgID"
+        secureJsonData:
+          httpHeaderValue1: "myorg-production-grafana"
+
+      - name: pyroscope-myorg-production-productone
+        uid: pyroscope-myorg-production-productone
+        type: phlare
+        access: proxy
+        url: http://ps-pyroscope:4040
+        isDefault: false
+        editable: true
+        jsonData:
+          httpHeaderName1: "X-Scope-OrgID"
+        secureJsonData:
+          httpHeaderValue1: "myorg-production-productone"
+
+      - name: pyroscope-myorg-production-producttwo
+        uid: pyroscope-myorg-production-producttwo
+        type: phlare
+        access: proxy
+        url: http://ps-pyroscope:4040
+        isDefault: false
+        editable: true
+        jsonData:
+          httpHeaderName1: "X-Scope-OrgID"
+        secureJsonData:
+          httpHeaderValue1: "myorg-production-producttwo"

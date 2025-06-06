@@ -137,7 +137,7 @@ gateway:
     maxReplicas: 4
   service:
     type: ClusterIP # Change to LoadBalancer if you want to expose it outside the cluster
-  
+
   # # ingress for external access, enable this if different cluster, you need load balancer
   # ingress:
   #   enabled: true
