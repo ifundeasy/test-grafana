@@ -21,69 +21,92 @@ pyroscope:
     profiles.grafana.com/cpu.port_name: http2
     profiles.grafana.com/goroutine.scrape: "true"
     profiles.grafana.com/goroutine.port_name: http2
-      
+
   extraArgs:
     store-gateway.sharding-ring.replication-factor: "3"
 
   components:
+    gateway:
+      kind: Deployment
+      replicaCount: 2
+      resources:
+        limits:
+          memory: 512Mi
+          cpu: 200m
+        requests:
+          memory: 512Mi
+          cpu: 160m
+
     querier:
       kind: Deployment
       replicaCount: 2
-      # resources:
-      #   limits:
-      #     memory: 1Gi
-      #   requests:
-      #     memory: 256Mi
-      #     cpu: 1
+      resources:
+        limits:
+          memory: 512Mi
+          cpu: 200m
+        requests:
+          memory: 512Mi
+          cpu: 160m
+
     query-frontend:
       kind: Deployment
       replicaCount: 2
-      # resources:
-      #   limits:
-      #     memory: 1Gi
-      #   requests:
-      #     memory: 256Mi
-      #     cpu: 100m
+      resources:
+        limits:
+          memory: 512Mi
+          cpu: 200m
+        requests:
+          memory: 512Mi
+          cpu: 160m
+
     query-scheduler:
       kind: Deployment
       replicaCount: 2
-      # resources:
-      #   limits:
-      #     memory: 1Gi
-      #   requests:
-      #     memory: 256Mi
-      #     cpu: 100m
+      resources:
+        limits:
+          memory: 512Mi
+          cpu: 200m
+        requests:
+          memory: 512Mi
+          cpu: 160m
+
     distributor:
       kind: Deployment
       replicaCount: 2
-      # resources:
-      #   limits:
-      #     memory: 1Gi
-      #   requests:
-      #     memory: 256Mi
-      #     cpu: 500m
+      resources:
+        limits:
+          memory: 400Mi
+          cpu: 400m
+        requests:
+          memory: 512Mi
+          cpu: 500m
+
     ingester:
       kind: StatefulSet
       replicaCount: 2
       terminationGracePeriodSeconds: 600
-      # resources:
-      #   limits:
-      #     memory: 16Gi
-      #   requests:
-      #     memory: 8Gi
-      #     cpu: 1
+      resources:
+        limits:
+          memory: 400Mi
+          cpu: 400m
+        requests:
+          memory: 512Mi
+          cpu: 500m
+
     compactor:
       kind: StatefulSet
       replicaCount: 2
       terminationGracePeriodSeconds: 1200
       persistence:
         enabled: false
-      # resources:
-      #   limits:
-      #     memory: 16Gi
-      #   requests:
-      #     memory: 8Gi
-      #     cpu: 1
+      resources:
+        limits:
+          memory: 512Mi
+          cpu: 200m
+        requests:
+          memory: 512Mi
+          cpu: 160m
+
     store-gateway:
       kind: StatefulSet
       replicaCount: 2
@@ -91,12 +114,13 @@ pyroscope:
         # The store-gateway needs not need persistent storage, but we still run it as a StatefulSet
         # This is to avoid having blocks of data being
         enabled: false
-      # resources:
-      #   limits:
-      #     memory: 16Gi
-      #   requests:
-      #     memory: 8Gi
-      #     cpu: 1
+      resources:
+        limits:
+          memory: 512Mi
+          cpu: 200m
+        requests:
+          memory: 512Mi
+          cpu: 160m
       readinessProbe:
         # The store gateway can be configured to wait on startup for ring stability to be reached before it becomes
         # ready. See the `store-gateway.sharding-ring.wait-stability-min-duration` server argument for more information.
@@ -104,31 +128,34 @@ pyroscope:
         # Depending on this flag and the number of tenants + blocks that need to be synced on startup, pods can take
         # some time to become ready. This value can be used to ensure Kubernetes waits long enough and reduce errors.
         initialDelaySeconds: 60
+
     tenant-settings:
       kind: Deployment
       replicaCount: 1
-      # resources:
-      #   limits:
-      #     memory: 4Gi
-      #   requests:
-      #     memory: 16Mi
-      #     cpu: 0.1
+      resources:
+        limits:
+          memory: 512Mi
+          cpu: 200m
+        requests:
+          memory: 512Mi
+          cpu: 160m
+
     ad-hoc-profiles:
       kind: Deployment
       replicaCount: 1
-      # resources:
-      #   limits:
-      #     memory: 4Gi
-      #   requests:
-      #     memory: 16Mi
-      #     cpu: 0.1
-
+      resources:
+        limits:
+          memory: 512Mi
+          cpu: 200m
+        requests:
+          memory: 512Mi
+          cpu: 160m
 
 tracing:
   profiling_enabled: true
 
 alloy:
   enabled: false
-  
+
 minio:
   enabled: false
