@@ -30,6 +30,13 @@ distributor:
     enabled: true
     minReplicas: 2
     maxReplicas: 4
+  resources:
+    requests:
+      cpu: 400m
+      memory: 400Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
   receivers:
     # jaeger:
     # opencensus:
@@ -73,6 +80,28 @@ ingester:
     enabled: true
     minReplicas: 2
     maxReplicas: 4
+  resources:
+    requests:
+      cpu: 400m
+      memory: 400Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+compector:
+  enabled: true
+  replicas: 1
+  autoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 2
+  resources:
+    requests:
+      cpu: 160m
+      memory: 200Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
 
 metricsGenerator:
   enabled: true
@@ -81,6 +110,13 @@ metricsGenerator:
     enabled: true
     minReplicas: 1
     maxReplicas: 2
+  resources:
+    requests:
+      cpu: 400m
+      memory: 400Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
 
   remoteWriteUrl: http://mr-mimir-distributor/api/v1/push
 
@@ -139,7 +175,14 @@ memcached:
   autoscaling:
     enabled: true
     minReplicas: 1
-    maxReplicas: 2
+    maxReplicas: 1
+  resources:
+    requests:
+      cpu: 160m
+      memory: 200Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
 
 querier:
   replicas: 1
@@ -147,6 +190,13 @@ querier:
     enabled: true
     minReplicas: 1
     maxReplicas: 2
+  resources:
+    requests:
+      cpu: 160m
+      memory: 200Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
 
 queryFrontend:
   query:
@@ -156,6 +206,13 @@ queryFrontend:
     enabled: true
     minReplicas: 1
     maxReplicas: 2
+  resources:
+    requests:
+      cpu: 160m
+      memory: 200Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
 
 gateway:
   enabled: true
@@ -166,10 +223,10 @@ gateway:
     maxReplicas: 4
   resources:
     requests:
-      cpu: 200m
-      memory: 256Mi
+      cpu: 160m
+      memory: 400Mi
     limits:
-      cpu: 400m
+      cpu: 200m
       memory: 512Mi
 
 traces:

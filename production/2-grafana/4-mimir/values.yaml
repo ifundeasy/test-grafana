@@ -1,22 +1,47 @@
 # NOTE: https://medium.com/@martinko.komorny/grafana-agent-alloy-mimir-minio-grafana-in-kubernetes-42cb63020f75
 query_scheduler:
-  replicas: 1 # Modify Number of replicas if you want, The default number of replicas for the query_scheduler is 2
-
-querier:
-  replicas: 1
+  replicas: 2
   autoscaling:
     enabled: true
-    minReplicas: 1
-    maxReplicas: 2 # Modify Number of replicas if you want, The default number of replicas for the querier is 2# Choose the storageClass you wanna use
+    minReplicas: 2
+    maxReplicas: 4
+  resources:
+    requests:
+      cpu: 160m
+      memory: 400Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+querier:
+  replicas: 2
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 4
+  resources:
+    requests:
+      cpu: 160m
+      memory: 400Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
 
 queryFrontend:
   query:
     enabled: true
-  replicas: 1
+  replicas: 2
   autoscaling:
     enabled: true
-    minReplicas: 1
-    maxReplicas: 2
+    minReplicas: 2
+    maxReplicas: 4
+  resources:
+    requests:
+      cpu: 160m
+      memory: 400Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
 
 ingester:
   replicas: 2
@@ -24,10 +49,29 @@ ingester:
     enabled: true
     minReplicas: 2
     maxReplicas: 4
+  resources:
+    requests:
+      cpu: 400m
+      memory: 400Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
   zoneAwareReplication: # zone-aware replication is the replication of data across failure domains, Enable it if you want to use it, https://grafana.com/docs/mimir/latest/configure/configure-zone-aware-replication/
     enabled: false
 
 store_gateway:
+  replicas: 2
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 4
+  resources:
+    requests:
+      cpu: 160m
+      memory: 400Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
   zoneAwareReplication: # zone-aware replication is the replication of data across failure domains, Enable it if you want to use it, https://grafana.com/docs/mimir/latest/configure/configure-zone-aware-replication/
     enabled: false
 
@@ -40,11 +84,101 @@ gateway:
     maxReplicas: 4
   resources:
     requests:
+      cpu: 160m
+      memory: 400Mi
+    limits:
       cpu: 200m
       memory: 256Mi
-    limits:
+
+disributor:
+  enabled: true
+  replicas: 2
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 4
+  resources:
+    requests:
       cpu: 400m
+      memory: 400Mi
+    limits:
+      cpu: 500m
       memory: 512Mi
+
+compactor:
+  enabled: true
+  replicas: 2
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 4
+  resources:
+    requests:
+      cpu: 160m
+      memory: 400Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+nginx:
+  enabled: true
+  replicas: 1
+  autoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 2
+  resources:
+    requests:
+      cpu: 160m
+      memory: 400Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+alertmanager:
+  enabled: true
+  replicas: 1
+  autoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 2
+  resources:
+    requests:
+      cpu: 160m
+      memory: 400Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+ruler:
+  enabled: true
+  replicas: 1
+  autoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 2
+  resources:
+    requests:
+      cpu: 160m
+      memory: 400Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+overrides_exporter:
+  enabled: true
+  replicas: 1
+  autoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 2
+  resources:
+    requests:
+      cpu: 160m
+      memory: 400Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
 
 mimir:
   structuredConfig:
@@ -63,7 +197,7 @@ mimir:
     alertmanager_storage:
       backend: s3
       s3:
-        bucket_name: grafana-mimir-ruler
+        bucket_name: grafana-mimir-alertmanager
     ruler_storage:
       backend: s3
       s3:

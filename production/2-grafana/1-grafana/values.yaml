@@ -6,9 +6,17 @@ admin:
 
 replicas: 1
 autoscaling:
-  enabled: false
+  enabled: true
   minReplicas: 1
   maxReplicas: 2
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 400m
+    memory: 400Mi
 
 datasources:
   datasources.yaml:

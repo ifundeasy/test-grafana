@@ -12,10 +12,10 @@ alloy:
   resources:
     limits:
       cpu: 200m
-      memory: 256Mi
+      memory: 1024Mi
     requests:
-      cpu: 100m
-      memory: 128Mi
+      cpu: 160m
+      memory: 800Mi
 
   extraPorts:
     - name: grpc-otlp
