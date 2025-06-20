@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: simple-crud
-  namespace: product-one
+  namespace: core
 spec:
   selector:
     app: simple-crud
@@ -10,7 +10,7 @@ spec:
     - protocol: TCP
       port: 3000
       targetPort: 3000
-      nodePort: 30000
+      nodePort: 30001
   type: NodePort
 
 ---
@@ -18,23 +18,25 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: simple-crud-config
-  namespace: product-one
+  namespace: core
 data:
   APP_NAME: simple-crud
   APP_PORT: "3000"
-  PYROSCOPE_URI: "http://ps-pyroscope-distributor.grafana.svc.cluster.local:4040"
-  PYROSCOPE_TENANTID: "myorg-production-productone"
-  OTEL_RPC_URI: al-product-one-alloy:4317
+  PYROSCOPE_URI: "http://ps-pyroscope-distributor.shared.cluster"
+  PYROSCOPE_TENANTID: "edot-shared-grafana"
+  OTEL_RPC_URI: al-core-alloy:4317
   EXTERNAL_GRPC: "grpc-server:50051"
-  EXTERNAL_HTTP: http://simple-crud.product-two.svc.cluster.local:3000/products
-  MONGO_URI: mongodb://root:mypswd123@host.docker.internal:27017
+  EXTERNAL_HTTP: http://simple-crud.core.svc.cluster.local:3000/products
+  MONGO_URI: mongodb://root:mypswd123@0.tcp.ap.ngrok.io:18932
+  # MONGO_URI: mongodb+srv://for-boilerplate-testing-only:uf61wEt3tkl6rF2k@svc-user-develop.m1aqy.mongodb.net/?retryWrites=true&w=majority
+  # MONGO_URI: mongodb://for-boilerplate-testing-only:uf61wEt3tkl6rF2k@svc-user-develop-shard-00-00.m1aqy.mongodb.net:27017,svc-user-develop-shard-00-01.m1aqy.mongodb.net:27017,svc-user-develop-shard-00-02.m1aqy.mongodb.net:27017/?ssl=true&replicaSet=atlas-duagkl-shard-0&authSource=admin&retryWrites=true&w=majority&ssl=true
   MONGO_DB_NAME: grafana
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: simple-crud
-  namespace: product-one
+  namespace: core
 spec:
   replicas: 2
   selector:
