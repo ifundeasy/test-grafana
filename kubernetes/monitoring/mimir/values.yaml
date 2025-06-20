@@ -1,0 +1,238 @@
+# NOTE: https://medium.com/@martinko.komorny/grafana-agent-alloy-mimir-minio-grafana-in-kubernetes-42cb63020f75
+
+# ! Using KEDA autoscaling
+queryFrontend:
+  query:
+    enabled: true
+  replicas: 1
+  kedaAutoscaling:
+    enabled: true
+    minReplicaCount: 1
+    maxReplicaCount: 2
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 60
+  resources:
+    requests:
+      cpu: 160m
+      memory: 300Mi
+    limits:
+      cpu: 200m
+      memory: 384Mi
+
+# ! Chart has no HPA config
+query_scheduler:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 80m
+      memory: 100Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
+
+# ! Using KEDA autoscaling
+querier:
+  replicas: 1
+  kedaAutoscaling:
+    enabled: true
+    minReplicaCount: 1
+    maxReplicaCount: 2
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 60
+  resources:
+    requests:
+      cpu: 320m
+      memory: 400Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+# ! This is statefulset, so it can't be scaled up and down automatically
+ingester:
+  replicas: 2
+  resources:
+    requests:
+      cpu: 160m
+      memory: 300Mi
+    limits:
+      cpu: 200m
+      memory: 384Mi
+  zoneAwareReplication: # zone-aware replication is the replication of data across failure domains, Enable it if you want to use it, https://grafana.com/docs/mimir/latest/configure/configure-zone-aware-replication/
+    enabled: false
+
+# ! This is statefulset, so it can't be scaled up and down automatically
+store_gateway:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 80m
+      memory: 200Mi
+    limits:
+      cpu: 100m
+      memory: 256Mi
+  zoneAwareReplication: # zone-aware replication is the replication of data across failure domains, Enable it if you want to use it, https://grafana.com/docs/mimir/latest/configure/configure-zone-aware-replication/
+    enabled: false
+
+gateway:
+  enabled: true
+  replicas: 1
+  autoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 2
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 60
+  resources:
+    requests:
+      cpu: 80m
+      memory: 200Mi
+    limits:
+      cpu: 100m
+      memory: 256Mi
+
+# ! Using KEDA autoscaling
+distributor:
+  enabled: true
+  replicas: 1
+  kedaAutoscaling:
+    enabled: true
+    minReplicaCount: 1
+    maxReplicaCount: 2
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 60
+  resources:
+    requests:
+      cpu: 80m
+      memory: 200Mi
+    limits:
+      cpu: 100m
+      memory: 256Mi
+
+# ! This is statefulset, so it can't be scaled up and down automatically
+compactor:
+  enabled: true
+  replicas: 1
+  resources:
+    requests:
+      cpu: 40m
+      memory: 100Mi
+    limits:
+      cpu: 50m
+      memory: 128Mi
+
+nginx:
+  enabled: true
+  replicas: 1
+  autoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 2
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 60
+  resources:
+    requests:
+      cpu: 40m
+      memory: 50Mi
+    limits:
+      cpu: 50m
+      memory: 64Mi
+
+# ! This is statefulset, so it can't be scaled up and down automatically
+alertmanager:
+  enabled: true
+  replicas: 1
+  resources:
+    requests:
+      cpu: 40m
+      memory: 100Mi
+    limits:
+      cpu: 50m
+      memory: 128Mi
+
+# ! Using KEDA autoscaling
+ruler:
+  enabled: true
+  replicas: 1
+  kedaAutoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 2
+  resources:
+    requests:
+      cpu: 40m
+      memory: 100Mi
+    limits:
+      cpu: 50m
+      memory: 128Mi
+
+# ! Chart has no HPA config
+overrides_exporter:
+  enabled: true
+  replicas: 1
+  resources:
+    requests:
+      cpu: 40m
+      memory: 100Mi
+    limits:
+      cpu: 50m
+      memory: 128Mi
+
+# ! Chart has no HPA config
+rollout_operator:
+  enabled: true
+  replicas: 1
+  resources:
+    requests:
+      cpu: 40m
+      memory: 50Mi
+    limits:
+      cpu: 50m
+      memory: 64Mi
+
+mimir:
+  structuredConfig:
+    common:
+      storage:
+        backend: s3
+        s3:
+          endpoint: host.docker.internal:9000
+          access_key_id: default
+          secret_access_key: mypswd123
+          bucket_name: grafana-mimir-ruler
+          region: us-east-1
+          insecure: true # minio/localstack = true, AWS S3 = false
+          http:
+            insecure_skip_verify: true
+    alertmanager_storage:
+      backend: s3
+      s3:
+        bucket_name: grafana-mimir-alert
+    ruler_storage:
+      backend: s3
+      s3:
+        bucket_name: grafana-mimir-ruler
+    blocks_storage:
+      backend: s3
+      s3:
+        bucket_name: grafana-mimir-blocks
+
+    memberlist:
+      cluster_label: "mimir"
+      cluster_label_verification_disabled: false
+    server:
+      log_level: debug
+      grpc_server_max_recv_msg_size: 104857600
+      grpc_server_max_send_msg_size: 104857600
+      grpc_server_max_concurrent_streams: 1000
+    limits:
+      max_label_names_per_series: 120
+      max_global_series_per_user: 12000000
+      ingestion_burst_size: 200000
+      ingestion_rate: 150000
+      max_global_series_per_metric: 200000000
+      compactor_blocks_retention_period: 24h
+    compactor:
+      compaction_interval: 24h
+## disabled services ##
+minio:
+  enabled: false

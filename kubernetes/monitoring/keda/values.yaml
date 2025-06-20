@@ -1,0 +1,31 @@
+crds:
+  install: true
+
+operator:
+  logLevel: info
+
+metricsApiServer:
+  enabled: true
+
+resources:
+  operator:
+    requests:
+      cpu: 80m
+      memory: 200Mi
+    limits:
+      cpu: 100m
+      memory: 256Mi
+  metricServer:
+    requests:
+      cpu: 80m
+      memory: 100Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
+  webhooks:
+    requests:
+      cpu: 80m
+      memory: 100Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
