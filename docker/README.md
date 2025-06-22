@@ -1,19 +1,19 @@
-# dependency
+# docker
 
 ## install
 ```bash
-cd dependency
+cd docker
 docker compose up -d
 ```
 
 ## stop
 ```bash
-cd dependency
+cd docker
 docker compose stop
 ```
 
 ## uninstall
 ```bash
-cd dependency
+cd docker
 docker compose down -v
 ```

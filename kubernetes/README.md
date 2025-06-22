@@ -5,7 +5,7 @@
 ### 1. Install kind & dependencies
 
 ```bash
-cd ../dependency
+cd ../docker
 docker compose up -d
 
 cd kubernetes
